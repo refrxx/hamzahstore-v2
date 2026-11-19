@@ -1,0 +1,37 @@
+name: sync-catalog
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [sync-catalog]
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Regenerate catalog.js dari Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/sync-catalog.mjs
+
+      - name: Commit & push bila ada perubahan
+        run: |
+          git config user.name "seller-center-bot"
+          git config user.email "bot@hamzahquran.com"
+          if git diff --quiet -- catalog.js; then
+            echo "catalog.js tidak berubah."
+            exit 0
+          fi
+          git add catalog.js
+          git commit -m "chore: sync catalog from seller center"
+          git push origin HEAD:master

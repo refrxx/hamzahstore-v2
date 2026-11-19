@@ -146,6 +146,19 @@ function doPost(e) {
           }
         });
 
+      case 'list':
+        // Read-only: dipakai Seller Center untuk agregat member + daftar pesanan.
+        var last = sh.getLastRow();
+        var rows = last < 2 ? [] : sh.getRange(2, 1, last - 1, HEADERS.length).getValues();
+        var orders = rows.map(function (r) {
+          var o = {};
+          HEADERS.forEach(function (h, i) {
+            o[h] = r[i] instanceof Date ? r[i].toISOString() : r[i];
+          });
+          return o;
+        });
+        return out_({ ok: true, orders: orders });
+
       default:
         return out_({ ok: false, error: 'unknown action' });
     }
